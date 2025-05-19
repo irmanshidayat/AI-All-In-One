@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chatbot Dadan AI - Suara Pelanggan">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="twilio-sid" content="<%= twilioAccountSid %>">
+  <meta name="openrouter-key" content="<%= openrouterApiKey %>">
+  <title><%= title %> | Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Dashboard CSS -->
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <!-- Background Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  
+  <!-- Include Navbar partial -->
+  <%- include('../partials/navbar') %>
+
+  <main class="container py-5">
+    <div class="row">
+      <!-- Sidebar Menu (Kolom Kiri) -->
+      <div class="col-lg-3 col-md-4 mb-4 mb-md-0">
+        <%- include('../partials/sidebar') %>
+      </div> 
+      
+      <!-- Content Area (Kolom Kanan) -->
+      <div class="col-lg-9 col-md-8">
+        <div class="content-area">
+          <% if (typeof body !== 'undefined') { %>
+            <%- body %>
+          <% } else { %>
+            
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-4 text-center">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-12">
+          <p class="mb-0 text-muted">
+            <i class="bi bi-robot me-2"></i>
+            &copy; <%= new Date().getFullYear() %> Chatbot Dadan AI. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JS -->
+  <script src="/js/script.js"></script>
+  <!-- Content Script -->
+  <script src="/js/contentScript.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+/* Dashboard Sidebar styling */
+.sidebar {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  height: auto;
+  min-height: calc(100vh - 180px);
+  position: sticky;
+  top: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.sidebar-menu li {
+  margin-bottom: 8px;
+  width: 100%;
+  display: block;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.sidebar-menu a:hover, .sidebar-menu a.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  width: 100%;
+}
+
+.sidebar-menu .icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+  display: inline-flex;
+}
+
+.sidebar-menu .title {
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.sidebar-header {
+  font-weight: 600;
+  color: #333;
+  padding: 0 15px;
+  margin-bottom: 15px;
+}
+
+.content-area {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+}
+
+.menu-category {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding: 0 15px;
+}
+
+/* Dashboard cards */
+.dashboard-content h1 {
+  margin-bottom: 15px;
+}
+
+.dashboard-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card .card-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+.chart-container {
+  height: 250px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="500 Error - Chatbot Dadan AI">
+  <meta name="theme-color" content="#6366f1">
+  <title><%= title %> | Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Background Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 text-center">
+        <div class="error-container glass-card p-5 mt-5">
+          <div class="display-1 text-danger mb-4">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+          <h1 class="gradient-text mb-4">500 - Server Error</h1>
+          <p class="mb-4"><%= message || 'Terjadi kesalahan pada server. Mohon coba lagi nanti.' %></p>
+          <a href="/" class="btn btn-primary btn-lg">
+            <i class="bi bi-house me-2"></i>Kembali ke Beranda
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-4 text-center">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-12">
+          <p class="mb-0 text-muted">
+            <i class="bi bi-robot me-2"></i>
+            &copy; <%= new Date().getFullYear() %> Chatbot Dadan AI. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

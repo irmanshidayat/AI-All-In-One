@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Chatbot Dadan AI - Suara Pelanggan">
+  <meta name="theme-color" content="#6366f1">
+  <title>Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Decorative blobs for background -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="container-fluid px-0">
+    <%- include('../partials/message') %>
+
+    <div class="row justify-content-center align-items-center min-vh-100 mx-0">
+      <div class="col-12 col-md-10 col-lg-8 col-xl-7 px-0 px-sm-3">
+        <div class="row g-0 glass-card overflow-hidden auth-card shadow-lg animate__animated animate__fadeIn mx-2 mx-sm-0">
+          <!-- Left side illustration - hidden on mobile -->
+          <div class="col-lg-6 d-none d-lg-block position-relative bg-primary p-0">
+            <div class="h-100 d-flex flex-column justify-content-between text-white p-4 p-xl-5" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);">
+              <div class="animate__animated animate__fadeInLeft">
+                <h3 class="fw-bold mb-3">Chatbot Dadan AI</h3>
+                <p class="mb-5">Platform manajemen suara pelanggan cerdas dengan teknologi AI.</p>
+              </div>
+              <div class="floating">
+                <div class="mb-4 animate__animated animate__fadeInUp animate__delay-1s">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="me-3 bg-white bg-opacity-25 p-2 rounded-circle">
+                      <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <p class="fs-6 mb-0">Respons instan untuk pelanggan Anda</p>
+                  </div>
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="me-3 bg-white bg-opacity-25 p-2 rounded-circle">
+                      <i class="bi bi-graph-up"></i>
+                    </div>
+                    <p class="fs-6 mb-0">Analisis sentiment pelanggan</p>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div class="me-3 bg-white bg-opacity-25 p-2 rounded-circle">
+                      <i class="bi bi-shield-check"></i>
+                    </div>
+                    <p class="fs-6 mb-0">Keamanan data terjamin</p>
+                  </div>
+                </div>
+                <div class="text-white text-opacity-75 mt-5">
+                  <small>© <%= new Date().getFullYear() %> Chatbot Dadan AI</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right side login form -->
+          <div class="col-lg-6 p-4 p-md-5">
+            <div class="text-center mb-4 mb-md-5">
+              <div class="card-icon mb-4 floating animate__animated animate__pulse animate__infinite animate__slow">
+                <i class="bi bi-robot"></i>
+              </div>
+              <h4 class="fw-bold animate__animated animate__fadeInDown">Selamat Datang!</h4>
+              <p class="text-muted animate__animated animate__fadeIn animate__delay-1s">Masuk untuk mengakses dashboard</p>
+            </div>
+            
+            <!-- Mobile-only branding -->
+            <div class="d-block d-lg-none text-center mb-4 animate__animated animate__fadeIn">
+              <h5 class="gradient-text fw-bold">Chatbot Dadan AI</h5>
+              <p class="small text-muted">Platform suara pelanggan dengan AI</p>
+            </div>
+            
+            <form action="/auth/login" method="POST" class="animate__animated animate__fadeInUp animate__delay-1s">
+              <div class="mb-4">
+                <label class="form-label fw-medium small text-uppercase">Username</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-person"></i>
+                  </span>
+                  <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username" required autofocus>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="form-label fw-medium small text-uppercase">Password</label>
+                  <a href="#" class="text-decoration-none small text-primary">Lupa password?</a>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-lock"></i>
+                  </span>
+                  <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+                  <button class="btn btn-outline-secondary border border-start-0" type="button" id="togglePassword">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                  <label class="form-check-label small" for="rememberMe">
+                    Ingat saya
+                  </label>
+                </div>
+              </div>
+              
+              <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary py-2 pulse-on-hover">MASUK</button>
+              </div>
+              
+              <div class="text-center">
+                <p class="text-muted mb-0">Belum punya akun?</p>
+                <a href="/auth/register" class="fw-medium text-decoration-none text-primary">Daftar sekarang</a>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Mobile only feature highlights -->
+        <div class="d-block d-lg-none mt-4 px-3">
+          <div class="small text-center text-muted mt-4">
+            <p class="mb-2">© <%= new Date().getFullYear() %> Chatbot Dadan AI</p>
+            <div class="mt-3 d-flex justify-content-center flex-wrap gap-3">
+              <div class="badge bg-primary bg-opacity-10 text-primary p-2">
+                <i class="bi bi-chat-dots me-1"></i> Respons Instan
+              </div>
+              <div class="badge bg-primary bg-opacity-10 text-primary p-2">
+                <i class="bi bi-graph-up me-1"></i> Analisis Sentiment
+              </div>
+              <div class="badge bg-primary bg-opacity-10 text-primary p-2">
+                <i class="bi bi-shield-check me-1"></i> Keamanan Data
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Animate.css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  
+  <script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    });
+
+    // Memastikan width sesuai dengan ukuran viewport
+    document.addEventListener('DOMContentLoaded', function() {
+      // Force resize event untuk memastikan layout responsif bekerja dengan baik
+      window.dispatchEvent(new Event('resize'));
+    });
+  </script>
+</body>
+</html>

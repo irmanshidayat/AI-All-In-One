@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chatbot Dadan AI - Video Streaming">
+  <meta name="theme-color" content="#6366f1">
+  <title><%= title %> | Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Dashboard CSS -->
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <!-- Voice Agent CSS -->
+  <link rel="stylesheet" href="/css/voice-agent.css">
+  <!-- Video Streaming CSS -->
+  <link rel="stylesheet" href="/css/video-streaming.css">
+</head>
+<body>
+  <div class="main-content">
+    <%- include('../partials/navbar') %>
+    
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar Column -->
+        <div class="col-md-3 col-lg-2 sidebar">
+          <div class="sidebar-header">
+            <h3>Chatbot Dadan AI</h3>
+            <div class="mt-2">
+              <i class="bi bi-grid-1x2-fill me-2"></i> Menu Admin
+            </div>
+          </div>
+          
+          <div class="menu-category">Dashboard</div>
+          <ul class="sidebar-menu">
+            <li>
+              <a href="/dashboard" class="">
+                <span class="icon"><i class="bi bi-speedometer2"></i></span>
+                <span class="title">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a href="/dashboard/analytics" class="">
+                <span class="icon"><i class="bi bi-graph-up"></i></span>
+                <span class="title">Analitik</span>
+              </a>
+            </li>
+          </ul>
+          
+          <div class="menu-category">Manajemen</div>
+          <ul class="sidebar-menu">
+            <li>
+              <a href="/dashboard/voice-agent" class="">
+                <span class="icon"><i class="bi bi-telephone-outbound"></i></span>
+                <span class="title">Agent Voice Call</span>
+              </a>
+            </li>
+            <li>
+              <a href="/dashboard/research" class="">
+                <span class="icon"><i class="bi bi-journal-text"></i></span>
+                <span class="title">Riset Jurnal</span>
+              </a>
+            </li>
+            <li>
+              <a href="/dashboard/skripsi" class="">
+                <span class="icon"><i class="bi bi-file-earmark-text"></i></span>
+                <span class="title">Buat Skripsi</span>
+              </a>
+            </li>
+            <li>
+              <a href="/dashboard/video-streaming" class="active">
+                <span class="icon"><i class="bi bi-camera-video"></i></span>
+                <span class="title">Agent Video Streaming</span>
+              </a>
+            </li>
+          </ul>
+          
+          <div class="menu-category">Konfigurasi</div>
+          <ul class="sidebar-menu">
+            <li>
+              <a href="/dashboard/settings" class="">
+                <span class="icon"><i class="bi bi-gear"></i></span>
+                <span class="title">Pengaturan</span>
+              </a>
+            </li>
+            <li>
+              <a href="/dashboard/ai-models" class="">
+                <span class="icon"><i class="bi bi-cpu"></i></span>
+                <span class="title">Model AI</span>
+              </a>
+            </li>
+          </ul>
+          
+          <div class="sidebar-footer">
+            <a href="/auth/logout">
+              <span class="icon"><i class="bi bi-box-arrow-right"></i></span>
+              <span class="title">Logout</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Main Content Column -->
+        <div class="col-md-9 col-lg-10 content-wrapper">
+          <div class="content-header">
+            <div class="container-fluid">
+              <div class="row mb-2">
+                <div class="col-sm-6">
+                  <h1 class="m-0">Agent Video Streaming</h1>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="content">
+            <div class="container-fluid">
+              <!-- Debug Panel -->
+              <div class="debug-panel" id="debugPanel">
+                <div class="debug-content" id="debugContent"></div>
+              </div>
+              <div class="debug-controls">
+                <button id="toggleDebugBtn" class="debug-toggle-button">
+                  Show Debug Info
+                </button>
+              </div>
+
+              <!-- Display flash messages -->
+              <% if (message && message.length > 0) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  <%= message %>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              <% } %>
+              <% if (error && error.length > 0) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  <%= error %>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              <% } %>
+
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5 class="card-title">Avatar Selection</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                          <i class="bi bi-person-circle"></i> Select Avatar
+                        </button>
+                        <span class="ms-3">Selected: <span id="selectedAvatar">None</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5 class="card-title">Voice Selection</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#voiceModal">
+                          <i class="bi bi-mic"></i> Select Voice
+                        </button>
+                        <span class="ms-3">Selected: <span id="selectedVoice">None</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5 class="card-title mb-0">Video Stream</h5>
+                      <div class="connection-status">
+                        <div class="status-indicator">
+                          <span class="text-muted">WebSocket:</span>
+                          <span id="wsStatus">
+                            <span class="badge ws-error">Disconnected</span>
+                          </span>
+                        </div>
+                        <div class="status-indicator">
+                          <span class="text-muted">LiveKit:</span>
+                          <span id="livekitStatus">
+                            <span class="badge ws-error">Disconnected</span>
+                          </span>
+                        </div>
+                        <div class="status-indicator">
+                          <span class="text-muted">Status:</span>
+                          <span class="badge disconnected" id="connectionStatus">Disconnected</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="video-container">
+                        <video id="mediaElement" autoplay playsinline></video>
+                      </div>
+                      <div class="controls mt-3">
+                        <button id="startBtn" class="btn btn-success">
+                          <i class="bi bi-play-fill"></i> Start Streaming
+                        </button>
+                        <button id="stopBtn" class="btn btn-danger" disabled>
+                          <i class="bi bi-stop-fill"></i> Stop Streaming
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5 class="card-title">Text to Speech</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="input-group mb-3">
+                        <select class="form-select" id="taskType" style="max-width: 120px;">
+                          <option value="talk">Talk</option>
+                          <option value="repeat">Repeat</option>
+                        </select>
+                        <textarea id="textInput" class="form-control" rows="3" placeholder="Enter text for the avatar to speak..." disabled></textarea>
+                        <button id="sendBtn" class="btn btn-primary" disabled>
+                          <i class="bi bi-send"></i> Send
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5 class="card-title">Status Log</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="statusMessages" class="status-log"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatar Selection Modal -->
+  <div class="modal fade" id="avatarModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Select Avatar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="avatar-tabs mb-3">
+            <button class="btn btn-outline-primary active" data-tab="all">All Avatars</button>
+            <button class="btn btn-outline-primary" data-tab="male">Male</button>
+            <button class="btn btn-outline-primary" data-tab="female">Female</button>
+          </div>
+          <div class="avatar-grid">
+            <!-- Avatars will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Selection Modal -->
+  <div class="modal fade" id="voiceModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Select Voice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="voiceList">
+            <!-- Voices will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- HeyGen Streaming Avatar SDK -->
+  <script src="https://unpkg.com/@heygen/streaming-avatar@2.0.13/dist/index.js"></script>
+
+  <!-- LiveKit Client SDK -->
+  <script src="https://unpkg.com/livekit-client@1.11.2/dist/livekit-client.umd.js"></script>
+  <!-- Custom Video Streaming JS -->
+  <script src="/js/video-streaming.js"></script>
+</body>
+</html>

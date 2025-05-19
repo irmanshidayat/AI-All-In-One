@@ -1,0 +1,162 @@
+/**
+ * Research Module Styles
+ * Untuk tampilan fitur riset jurnal di Chatbot Dadan AI
+ */
+
+/* Navbar Styling */
+.navbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+/* Research Card Styles */
+.research-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.research-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.research-abstract {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-height: 80px;
+  overflow: hidden;
+  color: #555;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Citation Badge Styles */
+.citation-badges {
+  display: flex;
+  align-items: center;
+}
+
+.citation-badges .badge {
+  font-size: 0.8rem;
+  padding: 0.35em 0.65em;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.citation-badges .badge i {
+  margin-right: 0.25rem;
+}
+
+/* Research Content Styles */
+.research-full-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.research-full-content h5, 
+.research-full-content h6 {
+  margin-top: 1.2rem;
+  margin-bottom: 0.8rem;
+  color: #333;
+}
+
+.research-full-content p {
+  margin-bottom: 1rem;
+}
+
+/* Journal Summary Section */
+#journal-summary {
+  background-color: rgba(248, 249, 250, 0.7);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid #dee2e6;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+#journal-summary h5 {
+  color: #0d6efd;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+#journal-summary h6 {
+  color: #0c63e4;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* Search Form Styling */
+.search-form .input-group {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-form .form-control {
+  border-radius: 4px 0 0 4px;
+  border: 1px solid #ced4da;
+  padding: 0.6rem 1rem;
+}
+
+.search-form .btn-primary {
+  border-radius: 0 4px 4px 0;
+  padding: 0.6rem 1.5rem;
+}
+
+/* Detail Modal Styling */
+.modal-body .card-title {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+/* AI Analysis Section */
+#ai-response {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #dee2e6;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+#ai-question {
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+}
+
+#asked-question {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  background-color: rgba(108, 117, 125, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .research-full-content {
+    max-height: 400px;
+    padding: 1rem;
+  }
+  
+  .citation-badges .badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+}

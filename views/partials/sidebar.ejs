@@ -1,0 +1,75 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h3>Chatbot Dadan AI</h3>
+    <div class="mt-2">
+      <i class="bi bi-grid-1x2-fill me-2"></i> Menu Admin
+    </div>
+  </div>
+  
+  <div class="menu-category">Dashboard</div>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="/dashboard" class="<%= path === '/dashboard' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-speedometer2"></i></span>
+        <span class="title">Dashboard</span>
+      </a>
+    </li>
+    <li>
+      <a href="/dashboard/analytics" class="<%= path === '/dashboard/analytics' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-graph-up"></i></span>
+        <span class="title">Analitik</span>
+      </a>
+    </li>
+  </ul>
+  
+  <div class="menu-category">Manajemen</div>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="/dashboard/voice-agent" class="<%= path === '/dashboard/voice-agent' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-telephone-outbound"></i></span>
+        <span class="title">Agent Voice Call</span>
+      </a>
+    </li>
+    <li>
+      <a href="/dashboard/research" class="<%= path === '/dashboard/research' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-journal-text"></i></span>
+        <span class="title">Riset Jurnal</span>
+      </a>
+    </li>
+    <li>
+      <a href="/dashboard/skripsi" class="<%= path === '/dashboard/skripsi' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-file-earmark-text"></i></span>
+        <span class="title">Buat Skripsi</span>
+      </a>
+    </li>
+    <li>
+      <a href="/dashboard/video-streaming" class="<%= path === '/dashboard/video-streaming' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-camera-video"></i></span>
+        <span class="title">Agent Video Streaming</span>
+      </a>
+    </li>
+  </ul>
+  
+  <div class="menu-category">Konfigurasi</div>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="/dashboard/settings" class="<%= path === '/dashboard/settings' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-gear"></i></span>
+        <span class="title">Pengaturan</span>
+      </a>
+    </li>
+    <li>
+      <a href="/dashboard/ai-models" class="<%= path === '/dashboard/ai-models' ? 'active' : '' %>">
+        <span class="icon"><i class="bi bi-cpu"></i></span>
+        <span class="title">Model AI</span>
+      </a>
+    </li>
+  </ul>
+  
+  <div class="sidebar-footer">
+    <a href="/auth/logout">
+      <span class="icon"><i class="bi bi-box-arrow-right"></i></span>
+      <span class="title">Logout</span>
+    </a>
+  </div>
+</div>

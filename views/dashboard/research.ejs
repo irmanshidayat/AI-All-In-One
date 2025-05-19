@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chatbot Dadan AI - Suara Pelanggan">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="twilio-sid" content="<%= twilioAccountSid %>">
+  <meta name="twilio-token" content="<%= twilioAuthToken %>">
+  <meta name="twilio-phone" content="<%= twilioPhoneNumber %>">
+  <meta name="openrouter-key" content="<%= openrouterApiKey %>">
+  <meta name="openrouter-url" content="<%= openrouterApiUrl %>">
+  <title><%= title %> | Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Dashboard CSS -->
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <!-- Voice Agent CSS -->
+  <link rel="stylesheet" href="/css/voice-agent.css">
+  <!-- Research CSS -->
+  <link rel="stylesheet" href="/css/research.css">
+</head>
+
+<body>
+<!-- Create a guaranteed user object that will satisfy the navbar partial's conditions -->
+<% 
+// Define a fallback user object that will work with navbar.ejs
+const defaultUser = {
+  id: 1,
+  username: 'Admin',
+  email: 'admin@example.com'
+};
+
+// Try multiple approaches to get a valid user object
+let userObject = null;
+if (typeof user !== 'undefined' && user) {
+  userObject = user;
+} else if (typeof req !== 'undefined' && req && req.session && req.session.user) {
+  userObject = req.session.user;
+} else if (typeof locals !== 'undefined' && locals && locals.user) {
+  userObject = locals.user;
+} else {
+  // Use default user as fallback to ensure navbar displays
+  userObject = defaultUser;
+}
+%>
+
+<!-- Force navbar to display by passing the guaranteed user object -->
+<%- include('../partials/navbar', {user: userObject}) %>
+
+<!-- Two-column layout container -->
+<div class="container-fluid">
+  <div class="row">
+    <!-- Left column with sidebar -->
+    <div class="col-md-3 col-lg-2 p-0 border-end bg-light">
+      <%- include('../partials/sidebar') %>
+    </div>
+    
+    <!-- Right column with research content -->
+    <div class="col-md-9 col-lg-10">
+      <div class="dashboard-content">
+        <div class="container-fluid">
+          <!-- Include message partial for notifications -->
+          <%- include('../partials/message') %>
+          
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h1 class="page-title">Riset Jurnal</h1>
+              <p class="text-muted">Cari dan analisis jurnal ilmiah dengan bantuan AI</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title">Pencarian Jurnal</h5>
+                  <div class="search-form">
+                    <div class="input-group mb-3">
+                      <input type="text" class="form-control" id="search-input" placeholder="Cari jurnal berdasarkan judul, penulis, atau kata kunci">
+                      <button class="btn btn-primary" id="search-button" type="button">Cari</button>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <select class="form-select form-select-sm me-2" id="search-api" style="max-width: 200px;">
+                          <option value="core">CORE API</option>
+                          <option value="google">Google Scholar</option>
+                        </select>
+                      </div>
+                      <div>
+                        <select class="form-select form-select-sm me-2" id="search-type" style="max-width: 200px;">
+                          <option value="general">Pencarian Umum</option>
+                          <option value="subject">Berdasarkan Subject</option>
+                          <option value="doi">Berdasarkan DOI</option>
+                          <option value="title">Berdasarkan Judul</option>
+                          <option value="author">Berdasarkan Penulis</option>
+                          <option value="fulltext">Berdasarkan Fulltext</option>
+                        </select>
+                      </div>
+                      <div>
+                        <select class="form-select form-select-sm me-2" id="category-filter" style="max-width: 200px;">
+                          <option value="">Semua Kategori</option>
+                          <option value="Kesehatan">Kesehatan</option>
+                          <option value="Teknologi">Teknologi</option>
+                          <option value="Pendidikan">Pendidikan</option>
+                          <option value="Ekonomi">Ekonomi</option>
+                          <option value="Sosial">Sosial</option>
+                          <option value="Lainnya">Lainnya</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Hasil Pencarian</h5>
+                    <button class="btn btn-sm btn-outline-secondary" id="toggle-saved">Tampilkan Jurnal Tersimpan</button>
+                  </div>
+                  
+                  <div class="alert alert-info d-none" id="loading-indicator">
+                    <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                    Mencari jurnal...
+                  </div>
+                  
+                  <div class="alert alert-light text-center" id="no-results">
+                    <i class="bi bi-journal-text fs-3 d-block mb-2"></i>
+                    Silahkan masukkan kata kunci untuk mencari jurnal ilmiah
+                  </div>
+                  
+                  <div class="results-container d-none" id="results-container">
+                    <div class="row" id="research-results">
+                      <!-- Research results will be shown here -->
+                    </div>
+                    <div class="d-flex justify-content-center mt-4">
+                      <nav aria-label="Research pagination">
+                        <ul class="pagination" id="pagination">
+                          <!-- Pagination will be shown here -->
+                        </ul>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Research Detail Modal -->
+          <div class="modal fade" id="researchDetailModal" tabindex="-1" aria-labelledby="researchDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="researchDetailModalLabel">Detail Jurnal</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="research-detail-content">
+                  <!-- Research detail will be shown here -->
+                </div>
+                <div class="modal-footer justify-content-between">
+                  <div>
+                    <button type="button" class="btn btn-primary" id="analyze-content-btn">
+                      <i class="bi bi-file-earmark-text"></i> Analisis Konten
+                    </button>
+                  </div>
+                  <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="save-research-btn">
+                      <i class="bi bi-bookmark"></i> Simpan Jurnal
+                    </button>
+                    <a href="#" class="btn btn-success" id="download-pdf-btn" target="_blank">
+                      <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Research Full Content Modal -->
+          <div class="modal fade" id="researchFullContentModal" tabindex="-1" aria-labelledby="researchFullContentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="researchFullContentModalLabel">Konten Jurnal</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="d-flex justify-content-between mb-3">
+                    <h4 id="full-content-title"></h4>
+                    <span class="badge bg-secondary" id="content-status"></span>
+                  </div>
+                  
+                  <div class="alert alert-info d-none" id="loading-content">
+                    <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                    Memuat konten jurnal...
+                  </div>
+                  
+                  <div id="full-content-container" class="research-full-content border p-3 rounded bg-light">
+                    <!-- Full content will be shown here -->
+                  </div>
+                  
+                  <!-- Tambahan bagian summary jurnal -->
+                  <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                      <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Ringkasan Jurnal</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="summary-loading" class="text-center my-3 d-none">
+                        <div class="spinner-border text-info" role="status">
+                          <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Menghasilkan ringkasan jurnal...</p>
+                      </div>
+                      <div id="journal-summary" class="bg-light p-3 rounded border">
+                        <!-- Summary akan ditampilkan di sini -->
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <hr class="my-4">
+                  
+                  <div class="card mt-4">
+                    <div class="card-header bg-primary text-white">
+                      <h5 class="mb-0">Analisis dengan AI</h5>
+                    </div>
+                    <div class="card-body">
+                      <form id="ai-analysis-form">
+                        <div class="mb-3">
+                          <label for="ai-question" class="form-label">Ajukan pertanyaan tentang jurnal ini:</label>
+                          <input type="text" class="form-control" id="ai-question" 
+                                 placeholder="Contoh: Apa metodologi yang digunakan dalam penelitian ini?">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                          <i class="bi bi-robot"></i> Tanya AI
+                        </button>
+                      </form>
+                      
+                      <div class="mt-4 d-none" id="ai-response-container">
+                        <h6>Pertanyaan:</h6>
+                        <p id="asked-question" class="fst-italic"></p>
+                        
+                        <div class="alert alert-info d-none" id="loading-ai-response">
+                          <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                          AI sedang menganalisis...
+                        </div>
+                        
+                        <h6>Jawaban AI:</h6>
+                        <div id="ai-response" class="p-3 border rounded bg-light"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Before the script section, add a hidden element with user ID as data attribute -->
+<div id="user-data" data-user-id="<%= user ? user._id : '' %>" class="d-none"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const searchApi = document.getElementById('search-api');
+    const searchType = document.getElementById('search-type');
+    const categoryFilter = document.getElementById('category-filter');
+    const resultsContainer = document.getElementById('results-container');
+    const researchResults = document.getElementById('research-results');
+    const pagination = document.getElementById('pagination');
+    const noResults = document.getElementById('no-results');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const toggleSavedButton = document.getElementById('toggle-saved');
+    const saveResearchBtn = document.getElementById('save-research-btn');
+    const downloadPdfBtn = document.getElementById('download-pdf-btn');
+    const analyzeContentBtn = document.getElementById('analyze-content-btn');
+    const fullContentTitle = document.getElementById('full-content-title');
+    const contentStatus = document.getElementById('content-status');
+    const fullContentContainer = document.getElementById('full-content-container');
+    const loadingContent = document.getElementById('loading-content');
+    const aiAnalysisForm = document.getElementById('ai-analysis-form');
+    const aiQuestion = document.getElementById('ai-question');
+    const aiResponseContainer = document.getElementById('ai-response-container');
+    const askedQuestion = document.getElementById('asked-question');
+    const aiResponse = document.getElementById('ai-response');
+    const loadingAiResponse = document.getElementById('loading-ai-response');
+    
+    // Get user ID from data attribute
+    const userData = document.getElementById('user-data');
+    const currentUserId = userData ? userData.dataset.userId : '';
+    
+    let currentPage = 1;
+    let totalPages = 0;
+    let currentQuery = '';
+    let currentCategory = '';
+    let showSavedOnly = false;
+    let currentResearchId = null;
+    let currentResearchIsSaved = false;
+    
+    // Show/hide search options based on API selection
+    searchApi.addEventListener('change', () => {
+      updateSearchTypeOptions();
+    });
+
+    // Update search type options based on API selection
+    function updateSearchTypeOptions() {
+      const apiType = searchApi.value;
+      searchType.innerHTML = '';
+
+      if (apiType === 'core') {
+        // CORE API search options
+        addOption(searchType, 'general', 'Pencarian Umum');
+        addOption(searchType, 'subject', 'Berdasarkan Subject');
+        addOption(searchType, 'doi', 'Berdasarkan DOI');
+        addOption(searchType, 'title', 'Berdasarkan Judul');
+        addOption(searchType, 'author', 'Berdasarkan Penulis');
+        addOption(searchType, 'fulltext', 'Berdasarkan Fulltext');
+        addOption(searchType, 'outputs', 'Pencarian Outputs');
+      } else {
+        // Google Scholar API search options
+        addOption(searchType, 'general', 'Pencarian Umum');
+        addOption(searchType, 'category', 'Berdasarkan Kategori');
+      }
+    }
+
+    // Helper function to add options to select element
+    function addOption(selectElement, value, text) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      selectElement.appendChild(option);
+    }
+
+    // Initialize search type options
+    updateSearchTypeOptions();
+    
+    // Search functionality
+    searchButton.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        currentQuery = query;
+        currentCategory = categoryFilter.value;
+        currentPage = 1;
+        searchResearch();
+      }
+    });
+    
+    // Handle Enter key in search input
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchButton.click();
+      }
+    });
+    
+    // Category filter
+    categoryFilter.addEventListener('change', () => {
+      if (currentQuery) {
+        currentCategory = categoryFilter.value;
+        currentPage = 1;
+        searchResearch();
+      }
+    });
+    
+    // Toggle saved research
+    toggleSavedButton.addEventListener('click', () => {
+      showSavedOnly = !showSavedOnly;
+      if (showSavedOnly) {
+        toggleSavedButton.textContent = 'Tampilkan Semua Jurnal';
+        toggleSavedButton.classList.replace('btn-outline-secondary', 'btn-secondary');
+        getSavedResearch();
+      } else {
+        toggleSavedButton.textContent = 'Tampilkan Jurnal Tersimpan';
+        toggleSavedButton.classList.replace('btn-secondary', 'btn-outline-secondary');
+        if (currentQuery) {
+          searchResearch();
+        } else {
+          resultsContainer.classList.add('d-none');
+          noResults.classList.remove('d-none');
+        }
+      }
+    });
+    
+    // Handle saving research
+    saveResearchBtn.addEventListener('click', () => {
+      if (currentResearchId) {
+        saveResearch(currentResearchId);
+      }
+    });
+    
+    // Search research function
+    function searchResearch() {
+      loadingIndicator.classList.remove('d-none');
+      noResults.classList.add('d-none');
+      resultsContainer.classList.add('d-none');
+      
+      const apiType = searchApi.value;
+      const searchMethod = searchType.value;
+      let url = '';
+      
+      // Build URL based on API type and search method
+      if (apiType === 'google') {
+        // Google Scholar API
+        url = `/dashboard/research/search?query=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+        
+        if (currentCategory) {
+          url += `&category=${encodeURIComponent(currentCategory)}`;
+        }
+      } else {
+        // CORE API
+        switch(searchMethod) {
+          case 'general':
+            url = `/dashboard/research/search?query=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          case 'subject':
+            url = `/dashboard/research/subject/search?subject=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          case 'doi':
+            url = `/dashboard/research/doi/search?doi=${encodeURIComponent(currentQuery)}`;
+            break;
+          case 'title':
+            url = `/dashboard/research/title/search?title=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          case 'author':
+            url = `/dashboard/research/author/search?author=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          case 'fulltext':
+            url = `/dashboard/research/fulltext/search?text=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          case 'outputs':
+            url = `/dashboard/research/outputs/search?query=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+            break;
+          default:
+            url = `/dashboard/research/search?query=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+        }
+        
+        if (currentCategory && searchMethod === 'general') {
+          url += `&category=${encodeURIComponent(currentCategory)}`;
+        }
+      }
+      
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          loadingIndicator.classList.add('d-none');
+          
+          if (data.success && data.data.length > 0) {
+            displayResults(data.data);
+            displayPagination(data.pagination);
+            resultsContainer.classList.remove('d-none');
+          } else {
+            noResults.textContent = 'Tidak ada hasil yang ditemukan';
+            noResults.classList.remove('d-none');
+          }
+        })
+        .catch(error => {
+          console.error('Error searching research:', error);
+          loadingIndicator.classList.add('d-none');
+          noResults.textContent = 'Terjadi kesalahan saat mencari jurnal';
+          noResults.classList.remove('d-none');
+        });
+    }
+    
+    // Get saved research function
+    function getSavedResearch() {
+      loadingIndicator.classList.remove('d-none');
+      noResults.classList.add('d-none');
+      resultsContainer.classList.add('d-none');
+      
+      fetch('/dashboard/research/saved/list')
+        .then(response => response.json())
+        .then(data => {
+          loadingIndicator.classList.add('d-none');
+          
+          if (data.success && data.data.length > 0) {
+            displayResults(data.data);
+            // Hide pagination for saved research
+            pagination.innerHTML = '';
+            resultsContainer.classList.remove('d-none');
+          } else {
+            noResults.textContent = 'Tidak ada jurnal tersimpan';
+            noResults.classList.remove('d-none');
+          }
+        })
+        .catch(error => {
+          console.error('Error getting saved research:', error);
+          loadingIndicator.classList.add('d-none');
+          noResults.textContent = 'Terjadi kesalahan saat mengambil jurnal tersimpan';
+          noResults.classList.remove('d-none');
+        });
+    }
+    
+    // Save research function
+    function saveResearch(id) {
+      fetch(`/dashboard/research/${id}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Toggle save button appearance
+            currentResearchIsSaved = data.isSaved;
+            updateSaveButtonState();
+            
+            // Show toast notification
+            const message = data.isSaved ? 'Jurnal berhasil disimpan' : 'Jurnal dihapus dari daftar simpan';
+            showToast(message, 'success');
+            
+            // Refresh results if viewing saved list
+            if (showSavedOnly) {
+              getSavedResearch();
+            }
+          } else {
+            showToast('Gagal menyimpan jurnal', 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error saving research:', error);
+          showToast('Terjadi kesalahan saat menyimpan jurnal', 'danger');
+        });
+    }
+    
+    // Get research detail function
+    function getResearchDetail(id) {
+      currentResearchId = id;
+      
+      // Jika ini adalah ID sementara dan ada di cache, gunakan data dari cache
+      if ((id.startsWith('tmp_') || id === "undefined") && window.researchCache && window.researchCache[id]) {
+        const research = window.researchCache[id];
+        displayResearchDetail(research);
+        
+        // Check if the research is saved (using the currentUserId variable)
+        currentResearchIsSaved = research.savedBy && research.savedBy.includes(currentUserId);
+        updateSaveButtonState();
+        
+        // Show PDF download button if PDF URL exists
+        if (research.pdf_url) {
+          downloadPdfBtn.href = research.pdf_url;
+          downloadPdfBtn.classList.remove('d-none');
+        } else {
+          downloadPdfBtn.classList.add('d-none');
+        }
+        
+        // Show modal
+        const researchDetailModal = new bootstrap.Modal(document.getElementById('researchDetailModal'));
+        researchDetailModal.show();
+        return;
+      }
+      
+      // Jika bukan ID sementara atau tidak ada di cache, ambil dari server
+      fetch(`/dashboard/research/${id}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const research = data.data;
+            displayResearchDetail(research);
+            
+            // Check if the research is saved (using the currentUserId variable)
+            currentResearchIsSaved = research.savedBy && research.savedBy.includes(currentUserId);
+            updateSaveButtonState();
+            
+            // Show PDF download button if PDF URL exists
+            if (research.pdfUrl || research.pdf_url) {
+              downloadPdfBtn.href = research.pdfUrl || research.pdf_url;
+              downloadPdfBtn.classList.remove('d-none');
+            } else {
+              downloadPdfBtn.classList.add('d-none');
+            }
+            
+            // Show modal
+            const researchDetailModal = new bootstrap.Modal(document.getElementById('researchDetailModal'));
+            researchDetailModal.show();
+          } else {
+            showToast('Gagal memuat detail jurnal', 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error getting research detail:', error);
+          showToast('Terjadi kesalahan saat memuat detail jurnal', 'danger');
+        });
+    }
+    
+    // Display results function
+    function displayResults(results) {
+      researchResults.innerHTML = '';
+      
+      results.forEach(research => {
+        const card = document.createElement('div');
+        card.className = 'col-md-6 col-lg-4 mb-4';
+        
+        // Pastikan research memiliki ID, jika tidak buat ID sementara
+        const researchId = research.id || `tmp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        
+        // Simpan data penelitian lengkap dalam objek global agar mudah diakses
+        if (!window.researchCache) window.researchCache = {};
+        window.researchCache[researchId] = research;
+        
+        // Format authors for display
+        const authors = Array.isArray(research.authors) 
+          ? research.authors.slice(0, 2).join(', ') + (research.authors.length > 2 ? ', et al.' : '')
+          : (typeof research.authors === 'string' ? research.authors : '');
+        
+        // Format published date
+        const publishedDate = new Date(research.publishedDate || research.published_date).toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long'
+        });
+        
+        card.innerHTML = `
+          <div class="card h-100 research-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="badge bg-secondary">${research.category}</span>
+                ${research.savedBy && research.savedBy.includes(currentUserId) ? 
+                  '<span class="badge bg-success"><i class="bi bi-bookmark-fill"></i> Tersimpan</span>' : ''}
+              </div>
+              <h5 class="card-title">${research.title}</h5>
+              <p class="card-text text-muted mb-1">${authors}</p>
+              <p class="card-text text-muted mb-2">${research.journal} &bull; ${publishedDate}</p>
+              <p class="card-text research-abstract">${research.abstract?.substring(0, 150)}${research.abstract && research.abstract.length > 150 ? '...' : ''}</p>
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="citation-badges">
+                  <span class="badge bg-success me-1" title="Supporting Citations">${research.citations_supportive || 0} <i class="bi bi-hand-thumbs-up"></i></span>
+                  <span class="badge bg-danger me-1" title="Contrasting Citations">${research.citations_contrasting || 0} <i class="bi bi-hand-thumbs-down"></i></span>
+                  <span class="badge bg-info" title="Mentioning Citations">${research.citations_mentioning || 0} <i class="bi bi-chat-dots"></i></span>
+                </div>
+                <button class="btn btn-sm btn-primary view-detail" data-id="${researchId}">Detail</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        researchResults.appendChild(card);
+      });
+      
+      // Add event listeners to view detail buttons
+      document.querySelectorAll('.view-detail').forEach(button => {
+        button.addEventListener('click', () => {
+          getResearchDetail(button.dataset.id);
+        });
+      });
+    }
+    
+    // Display pagination function
+    function displayPagination(paginationData) {
+      pagination.innerHTML = '';
+      totalPages = paginationData.totalPages;
+      currentPage = paginationData.currentPage;
+      
+      if (totalPages <= 1) return;
+      
+      // Previous button
+      const prevLi = document.createElement('li');
+      prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+      prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                          </a>`;
+      pagination.appendChild(prevLi);
+      
+      // Page numbers
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        pagination.appendChild(pageLi);
+      }
+      
+      // Next button
+      const nextLi = document.createElement('li');
+      nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+      nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                          </a>`;
+      pagination.appendChild(nextLi);
+      
+      // Add event listeners
+      const pageLinks = pagination.querySelectorAll('.page-link');
+      pageLinks.forEach((link, index) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          if (index === 0 && currentPage > 1) {
+            // Previous button
+            currentPage--;
+          } else if (index === pageLinks.length - 1 && currentPage < totalPages) {
+            // Next button
+            currentPage++;
+          } else if (index !== 0 && index !== pageLinks.length - 1) {
+            // Page number
+            currentPage = parseInt(link.textContent);
+          }
+          
+          searchResearch();
+        });
+      });
+    }
+    
+    // Display research detail function
+    function displayResearchDetail(research) {
+      const detailContent = document.getElementById('research-detail-content');
+      
+      // Format authors for display
+      const authors = Array.isArray(research.authors) 
+        ? research.authors.join(', ')
+        : (typeof research.authors === 'string' ? research.authors : JSON.parse(research.authors || '[]').join(', '));
+      
+      // Format published date
+      const publishedDate = new Date(research.published_date || research.publishedDate).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Prepare keywords display
+      let keywords = '';
+      if (research.keywords) {
+        const keywordsArray = Array.isArray(research.keywords) 
+          ? research.keywords 
+          : JSON.parse(research.keywords || '[]');
+        
+        if (keywordsArray.length > 0) {
+          keywords = `<div class="mb-3">
+            <strong>Keywords:</strong><br>
+            ${keywordsArray.map(kw => `<span class="badge bg-light text-dark me-1">${kw}</span>`).join('')}
+           </div>`;
+        }
+      }
+      
+      // Set current research ID for the analyze button
+      analyzeContentBtn.dataset.id = research.id;
+      
+      detailContent.innerHTML = `
+        <h3 class="mb-3">${research.title}</h3>
+        
+        <p class="text-muted mb-2"><strong>Penulis:</strong> ${authors}</p>
+        <p class="text-muted mb-3"><strong>Jurnal:</strong> ${research.journal} &bull; ${publishedDate}</p>
+        
+        <div class="mb-4">
+          <div class="d-flex mb-2">
+            <span class="badge bg-secondary me-2">${research.category}</span>
+            ${research.doi ? `<span class="badge bg-light text-dark">DOI: ${research.doi}</span>` : ''}
+          </div>
+          
+          <div class="d-flex mb-3">
+            <div class="me-3">
+              <span class="badge bg-success p-2" title="Supporting Citations">
+                <i class="bi bi-hand-thumbs-up me-1"></i> ${research.citations_supportive || 0} Mendukung
+              </span>
+            </div>
+            <div class="me-3">
+              <span class="badge bg-danger p-2" title="Contrasting Citations">
+                <i class="bi bi-hand-thumbs-down me-1"></i> ${research.citations_contrasting || 0} Bertentangan
+              </span>
+            </div>
+            <div>
+              <span class="badge bg-info p-2" title="Mentioning Citations">
+                <i class="bi bi-chat-dots me-1"></i> ${research.citations_mentioning || 0} Menyebutkan
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <h5>Abstrak</h5>
+          <p>${research.abstract}</p>
+        </div>
+        
+        ${keywords}
+      `;
+    }
+    
+    // Analyze content button
+    analyzeContentBtn.addEventListener('click', function() {
+      const researchId = analyzeContentBtn.dataset.id;
+      if (researchId) {
+        // Close the detail modal
+        const researchDetailModal = bootstrap.Modal.getInstance(document.getElementById('researchDetailModal'));
+        researchDetailModal.hide();
+        
+        // Show the full content modal
+        getResearchFullContent(researchId);
+        
+        // Reset AI form and response
+        aiQuestion.value = '';
+        aiResponseContainer.classList.add('d-none');
+      }
+    });
+    
+    // Get research full content
+    function getResearchFullContent(id) {
+      loadingContent.classList.remove('d-none');
+      fullContentContainer.innerHTML = '';
+      contentStatus.textContent = '';
+      aiResponseContainer.classList.add('d-none');
+      
+      // Reset ringkasan
+      const summaryLoading = document.getElementById('summary-loading');
+      const journalSummary = document.getElementById('journal-summary');
+      summaryLoading.classList.add('d-none');
+      journalSummary.innerHTML = '';
+      
+      // Show the modal
+      const fullContentModal = new bootstrap.Modal(document.getElementById('researchFullContentModal'));
+      fullContentModal.show();
+      
+      // Jika ini adalah ID sementara dan ada di cache, gunakan data dari cache langsung
+      if ((id.startsWith('tmp_') || id === "undefined") && window.researchCache && window.researchCache[id]) {
+        const research = window.researchCache[id];
+        
+        // Untuk data yang ada di cache, kita langsung gunakan abstract sebagai konten
+        const content = research.abstract || 'Abstrak tidak tersedia';
+        
+        loadingContent.classList.add('d-none');
+        fullContentTitle.textContent = research.title;
+        contentStatus.textContent = 'Hanya Abstrak';
+        contentStatus.className = 'badge bg-warning';
+        
+        // Format the content with paragraphs
+        const formattedContent = content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+        fullContentContainer.innerHTML = `<p>${formattedContent}</p>`;
+        
+        // Store the research data in the form for AI analysis
+        aiAnalysisForm.dataset.researchId = id;
+        aiAnalysisForm.dataset.content = content;
+        aiAnalysisForm.dataset.title = research.title;
+        
+        // Generate summary from abstract
+        generateResearchSummary(research.title, content);
+        
+        // Jika memiliki PDF URL, coba fetch konten lengkapnya di background
+        if (research.pdf_url) {
+          // Tampilkan indikator loading kecil
+          fullContentContainer.innerHTML += `
+            <div class="mt-4 small text-muted">
+              <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+              Mencoba mendapatkan konten lengkap dari PDF...
+            </div>
+          `;
+          
+          // Buat URL dengan query parameters
+          let url = `/dashboard/research/${id}/full-content?doi=${encodeURIComponent(research.doi || '')}&pdfUrl=${encodeURIComponent(research.pdf_url || '')}&title=${encodeURIComponent(research.title || '')}&abstract=${encodeURIComponent(research.abstract || '')}`;
+          
+          // Fetch dalam background
+          fetch(url)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && !data.data.isAbstractOnly) {
+                // Update content status
+                contentStatus.textContent = 'Konten Lengkap';
+                contentStatus.className = 'badge bg-success';
+                
+                // Format the content with paragraphs
+                const content = data.data.fullContent.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                fullContentContainer.innerHTML = `<p>${content}</p>`;
+                
+                // Store updated content for AI analysis
+                aiAnalysisForm.dataset.content = data.data.fullContent;
+                
+                // Generate improved summary from full content
+                generateResearchSummary(research.title, data.data.fullContent);
+              }
+            })
+            .catch(error => {
+              console.error('Error getting full content in background:', error);
+            });
+        }
+        
+        return;
+      }
+      
+      // For regular IDs or temporary IDs not in cache, fetch from server
+      let url = `/dashboard/research/${id}/full-content`;
+      
+      // If this is a temporary ID, we need to add query parameters
+      if (id.startsWith('tmp_') || id === "undefined") {
+        // Find the research item from the DOM if needed
+        const research = findResearchById(id);
+        if (research) {
+          url += `?doi=${encodeURIComponent(research.doi || '')}&pdfUrl=${encodeURIComponent(research.pdf_url || '')}&title=${encodeURIComponent(research.title || '')}&abstract=${encodeURIComponent(research.abstract || '')}`;
+        }
+      }
+      
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          loadingContent.classList.add('d-none');
+          
+          if (data.success) {
+            fullContentTitle.textContent = data.data.title;
+            
+            if (data.data.isAbstractOnly) {
+              contentStatus.textContent = 'Hanya Abstrak';
+              contentStatus.className = 'badge bg-warning';
+            } else {
+              contentStatus.textContent = 'Konten Lengkap';
+              contentStatus.className = 'badge bg-success';
+            }
+            
+            // Format the content with paragraphs
+            const content = data.data.fullContent.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+            fullContentContainer.innerHTML = `<p>${content}</p>`;
+            
+            // Store the research ID and content in the form for AI analysis
+            aiAnalysisForm.dataset.researchId = id;
+            aiAnalysisForm.dataset.content = data.data.fullContent;
+            aiAnalysisForm.dataset.title = data.data.title;
+            
+            // Generate summary
+            generateResearchSummary(data.data.title, data.data.fullContent);
+          } else {
+            fullContentContainer.innerHTML = '<div class="alert alert-danger">Gagal memuat konten jurnal</div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error getting full content:', error);
+          loadingContent.classList.add('d-none');
+          fullContentContainer.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan saat memuat konten jurnal</div>';
+        });
+    }
+    
+    // Generate research summary using OpenRouter API
+    function generateResearchSummary(title, content) {
+      const summaryLoading = document.getElementById('summary-loading');
+      const journalSummary = document.getElementById('journal-summary');
+      
+      // Show loading
+      summaryLoading.classList.remove('d-none');
+      journalSummary.innerHTML = '';
+      
+      // Keep content short enough for API
+      const maxLength = 8000;
+      const trimmedContent = content.length > maxLength 
+        ? content.substring(0, maxLength) + "..."
+        : content;
+      
+      // Get OpenRouter API details from meta tags
+      const openrouterApiKey = document.querySelector('meta[name="openrouter-key"]').getAttribute('content');
+      const openrouterApiUrl = document.querySelector('meta[name="openrouter-url"]').getAttribute('content');
+      
+      if (!openrouterApiKey || !openrouterApiUrl) {
+        summaryLoading.classList.add('d-none');
+        journalSummary.innerHTML = '<div class="alert alert-danger">OpenRouter API kredensial tidak ditemukan</div>';
+        return;
+      }
+      
+      // Call OpenRouter API for summarization
+      fetch(`${openrouterApiUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "anthropic/claude-3-haiku",
+          messages: [
+            {
+              role: "system",
+              content: "Kamu adalah asisten penelitian yang membantu merangkum artikel jurnal akademis dengan singkat dan padat. Berikan ringkasan terstruktur yang mencakup: (1) Tujuan utama penelitian, (2) Metodologi yang digunakan, (3) Temuan kunci, dan (4) Implikasi/kesimpulan penting. Tulis dalam bahasa Indonesia yang mudah dipahami, tetapi tetap akurat secara ilmiah."
+            },
+            {
+              role: "user",
+              content: `Tolong buatkan ringkasan dari jurnal ini dengan format terstruktur:\n\nJudul: ${title}\n\nKonten: ${trimmedContent}`
+            }
+          ],
+          max_tokens: 800
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        summaryLoading.classList.add('d-none');
+        
+        if (data.choices && data.choices[0]) {
+          // Format the summary with proper paragraphs and styling
+          const summary = data.choices[0].message.content;
+          const formattedSummary = summary
+            .replace(/^# /gm, '<h5>')
+            .replace(/\n# /gm, '</p><h5>')
+            .replace(/\n## /gm, '</p><h6>')
+            .replace(/\n\n/gm, '</p><p>')
+            .replace(/\n/gm, '<br>');
+            
+          journalSummary.innerHTML = `<p>${formattedSummary}</p>`;
+        } else {
+          journalSummary.innerHTML = '<div class="alert alert-warning">Tidak dapat menghasilkan ringkasan untuk jurnal ini</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error generating summary:', error);
+        summaryLoading.classList.add('d-none');
+        journalSummary.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan saat menghasilkan ringkasan</div>';
+      });
+    }
+    
+    // Find research by ID in the current results
+    function findResearchById(id) {
+      // Convert the NodeList to an array for easier searching
+      const resultCards = Array.from(document.querySelectorAll('.view-detail')).map(button => {
+        return {
+          id: button.dataset.id,
+          element: button.closest('.research-card')
+        };
+      });
+      
+      const match = resultCards.find(card => card.id === id);
+      if (!match) return null;
+      
+      // Extract the research data from the card
+      const title = match.element.querySelector('.card-title').textContent;
+      const abstract = match.element.querySelector('.research-abstract').textContent;
+      const doi = match.element.querySelector('[title="DOI"]')?.textContent || '';
+      const pdf_url = '';  // This might be harder to extract from the DOM
+      
+      return {
+        id,
+        title,
+        abstract,
+        doi,
+        pdf_url
+      };
+    }
+    
+    // AI analysis form submit
+    aiAnalysisForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const question = aiQuestion.value.trim();
+      if (!question) return;
+      
+      const researchId = this.dataset.researchId;
+      if (!researchId) return;
+      
+      // Show loading
+      loadingAiResponse.classList.remove('d-none');
+      aiResponseContainer.classList.remove('d-none');
+      aiResponse.innerHTML = '';
+      askedQuestion.textContent = question;
+      
+      // For temporary IDs, we need to pass the content directly
+      const requestBody = { question };
+      
+      if (researchId.startsWith('tmp_')) {
+        // Add content and title to the request
+        requestBody.content = this.dataset.content || '';
+        requestBody.title = this.dataset.title || '';
+      }
+      
+      // Send question to API
+      fetch(`/dashboard/research/${researchId}/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+        .then(response => response.json())
+        .then(data => {
+          loadingAiResponse.classList.add('d-none');
+          
+          if (data.success) {
+            // Format the AI response with proper paragraphs
+            const answer = data.data.answer.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+            aiResponse.innerHTML = `<p>${answer}</p>`;
+          } else {
+            aiResponse.innerHTML = '<div class="alert alert-danger">Gagal mendapatkan analisis AI</div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error analyzing with AI:', error);
+          loadingAiResponse.classList.add('d-none');
+          aiResponse.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan saat menganalisis dengan AI</div>';
+        });
+    });
+    
+    // Update save button state
+    function updateSaveButtonState() {
+      if (currentResearchIsSaved) {
+        saveResearchBtn.innerHTML = '<i class="bi bi-bookmark-fill"></i> Hapus dari Simpan';
+        saveResearchBtn.classList.replace('btn-primary', 'btn-outline-primary');
+      } else {
+        saveResearchBtn.innerHTML = '<i class="bi bi-bookmark"></i> Simpan Jurnal';
+        saveResearchBtn.classList.replace('btn-outline-primary', 'btn-primary');
+      }
+    }
+    
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      // Create toast container if not exists
+      let toastContainer = document.querySelector('.toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+      }
+      
+      // Create toast
+      const toastId = `toast-${Date.now()}`;
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type} border-0`;
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.setAttribute('aria-atomic', 'true');
+      toast.setAttribute('id', toastId);
+      
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      
+      toastContainer.appendChild(toast);
+      
+      // Show toast
+      const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+      bsToast.show();
+      
+      // Remove toast after hidden
+      toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

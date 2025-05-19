@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chatbot Dadan AI - Suara Pelanggan">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="twilio-sid" content="<%= twilioAccountSid %>">
+  <meta name="twilio-token" content="<%= twilioAuthToken %>">
+  <meta name="twilio-phone" content="<%= twilioPhoneNumber %>">
+  <meta name="openrouter-key" content="<%= openrouterApiKey %>">
+  <meta name="openrouter-url" content="<%= openrouterApiUrl %>">
+  <title><%= title %> | Chatbot Dadan AI</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Dashboard CSS -->
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <!-- Voice Agent CSS -->
+  <link rel="stylesheet" href="/css/voice-agent.css">
+</head>
+
+<body>
+<!-- Create a guaranteed user object that will satisfy the navbar partial's conditions -->
+<% 
+// Define a fallback user object that will work with navbar.ejs
+const defaultUser = {
+  id: 1,
+  username: 'Admin',
+  email: 'admin@example.com'
+};
+
+// Try multiple approaches to get a valid user object
+let userObject = null;
+if (typeof user !== 'undefined' && user) {
+  userObject = user;
+} else if (typeof req !== 'undefined' && req && req.session && req.session.user) {
+  userObject = req.session.user;
+} else if (typeof locals !== 'undefined' && locals && locals.user) {
+  userObject = locals.user;
+} else {
+  // Use default user as fallback to ensure navbar displays
+  userObject = defaultUser;
+}
+%>
+
+<!-- Force navbar to display by passing the guaranteed user object -->
+<%- include('../partials/navbar', {user: userObject}) %>
+
+<!-- Two-column layout container -->
+<div class="container-fluid">
+  <div class="row">
+    <!-- Left column with sidebar -->
+    <div class="col-md-3 col-lg-2 p-0 border-end bg-light">
+      <%- include('../partials/sidebar') %>
+    </div>
+    
+    <!-- Right column with voice agent content -->
+    <div class="col-md-9 col-lg-10">
+      <div class="dashboard-content">
+        <div class="container-fluid">
+          <!-- Include message partial for notifications -->
+          <%- include('../partials/message') %>
+          
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h1 class="page-title">Agent Voice Call</h1>
+              <p class="text-muted">Kelola dan lakukan panggilan otomatis menggunakan AI Agent</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <ul class="nav nav-tabs mb-4" id="voiceAgentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab" aria-controls="contacts" aria-selected="true">
+                    Kontak
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab" aria-controls="config" aria-selected="false">
+                    Konfigurasi Agent
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="active-calls-tab" data-bs-toggle="tab" data-bs-target="#active-calls" type="button" role="tab" aria-controls="active-calls" aria-selected="false">
+                    Panggilan Aktif
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                    Riwayat
+                  </button>
+                </li>
+              </ul>
+              
+              <div class="tab-content" id="voiceAgentTabContent">
+                <!-- Contacts Tab -->
+                <div class="tab-pane fade show active" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
+                  <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-transparent">
+                      <h5 class="mb-0">Upload Daftar Kontak</h5>
+                    </div>
+                    <div class="card-body">
+                      <form id="importContactsForm" action="/dashboard/voice-agent/import" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                          <label for="contactsFile" class="form-label">File Excel (.xlsx, .xls, .csv)</label>
+                          <input class="form-control" type="file" id="contactsFile" name="contactsFile" accept=".xlsx,.xls,.csv" required>
+                          <div class="form-text">Upload file Excel dengan format: Nama dan Nomor Telepon</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Import Kontak</button>
+                      </form>
+                    </div>
+                  </div>
+                  
+                  <div class="card shadow-sm">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0">Daftar Kontak</h5>
+                      <button class="btn btn-success btn-sm" id="batchCallBtn" disabled>
+                        <i class="bi bi-telephone-outbound me-1"></i> Batch Call
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th><input type="checkbox" id="selectAll"></th>
+                              <th>Nama</th>
+                              <th>Nomor Telepon</th>
+                              <th>Status</th>
+                              <th>Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="contactsTableBody">
+                            <% if (contacts && contacts.length > 0) { %>
+                              <% contacts.forEach(function(contact) { %>
+                                <tr>
+                                  <td><input type="checkbox" class="contact-checkbox" value="<%= contact.id %>"></td>
+                                  <td><%= contact.name %></td>
+                                  <td><%= contact.phone %></td>
+                                  <td><span class="badge bg-secondary">Belum Dihubungi</span></td>
+                                  <td>
+                                    <button class="btn btn-primary btn-sm call-btn" data-id="<%= contact.id %>" data-name="<%= contact.name %>" data-phone="<%= contact.phone %>">
+                                      <i class="bi bi-telephone-outbound"></i> Call
+                                    </button>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="5" class="text-center">Belum ada kontak. Silakan import data terlebih dahulu.</td>
+                              </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Configuration Tab -->
+                <div class="tab-pane fade" id="config" role="tabpanel" aria-labelledby="config-tab">
+                  <div class="card shadow-sm">
+                    <div class="card-header bg-transparent">
+                      <h5 class="mb-0">Konfigurasi Agent</h5>
+                    </div>
+                    <div class="card-body">
+                      <form id="agentConfigForm" action="/dashboard/voice-agent/configure" method="post">
+                        <div class="mb-3">
+                          <label for="configName" class="form-label">Nama Konfigurasi</label>
+                          <input type="text" class="form-control" id="configName" name="configName" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                          <label for="agentRole" class="form-label">Peran Agent</label>
+                          <input type="text" class="form-control" id="agentRole" name="agentRole" required 
+                                 placeholder="Contoh: Customer Service Bank, Sales Mobil">
+                          <div class="form-text">Tentukan peran yang akan dimainkan oleh agent AI</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                          <label for="greetingTemplate" class="form-label">Template Greeting</label>
+                          <textarea class="form-control" id="greetingTemplate" name="greetingTemplate" rows="3" required>Halo [nama], kami dari Asosiasi Artificial Intelligence Indonesia, apa kabar anda hari ini?</textarea>
+                          <div class="form-text">Gunakan [nama] untuk menyisipkan nama kontak</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                          <label for="aiModel" class="form-label">Model AI</label>
+                          <select class="form-control" id="aiModel" name="aiModel" required>
+                            <% if (models && models.length > 0) { %>
+                              <% models.forEach(function(model) { %>
+                                <option value="<%= model.id %>" <%= model.id === defaultModel ? 'selected' : '' %>>
+                                  <%= model.name %> <% if (model.type === 'free') { %>(Gratis)<% } %>
+                                </option>
+                              <% }); %>
+                            <% } else { %>
+                              <option value="openai/gpt-3.5-turbo">OpenAI GPT-3.5 Turbo (Gratis)</option>
+                              <option value="anthropic/claude-instant-v1">Anthropic Claude Instant (Gratis)</option>
+                              <option value="google/palm-2-chat-bison">Google PaLM 2 Chat (Gratis)</option>
+                              <option value="meta-llama/llama-2-13b-chat">Meta Llama 2 13B Chat (Gratis)</option>
+                              <option value="mistralai/mistral-7b-instruct">Mistral 7B Instruct (Gratis)</option>
+                            <% } %>
+                          </select>
+                          <button type="button" id="refreshModelsBtn" class="btn btn-sm btn-outline-secondary mt-2">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Daftar Model
+                          </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                          <label for="knowledgeBase" class="form-label">Knowledge Base</label>
+                          <textarea class="form-control" id="knowledgeBase" name="knowledgeBase" rows="6" placeholder="Masukkan informasi yang perlu diketahui oleh agent AI"></textarea>
+                        </div>
+                        
+                        <!-- Tambahkan dropdown untuk voice TTS -->
+                        <div class="mb-3">
+                          <label for="ttsVoice" class="form-label">Pilih Suara TTS</label>
+                          <select class="form-select" id="ttsVoice" name="ttsVoice">
+                            <!-- Opsi akan diisi secara dinamis dengan JavaScript -->
+                          </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Simpan Konfigurasi</button>
+                      </form>
+                      
+                      <hr class="my-4">
+                      
+                      <h6>Konfigurasi Tersimpan</h6>
+                      <div class="table-responsive">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>Nama</th>
+                              <th>Peran Agent</th>
+                              <th>Model AI</th>
+                              <th>Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="configsTableBody">
+                            <% if (configs && configs.length > 0) { %>
+                              <% configs.forEach(function(config) { %>
+                                <tr>
+                                  <td><%= config.name %></td>
+                                  <td><%= config.role %></td>
+                                  <td><%= config.ai_model %></td>
+                                  <td>
+                                    <button class="btn btn-outline-primary btn-sm load-config-btn" data-id="<%= config.id %>">
+                                      <i class="bi bi-upload"></i> Gunakan
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-config-btn" data-id="<%= config.id %>">
+                                      <i class="bi bi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="4" class="text-center">Belum ada konfigurasi tersimpan</td>
+                              </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Active Calls Tab -->
+                <div class="tab-pane fade" id="active-calls" role="tabpanel" aria-labelledby="active-calls-tab">
+                  <div class="card shadow-sm">
+                    <div class="card-header bg-transparent">
+                      <h5 class="mb-0">Panggilan Aktif</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="activeCallsContainer" class="active-calls-container">
+                        <!-- Active calls will be displayed here -->
+                        <p class="text-muted text-center">Tidak ada panggilan aktif</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- History Tab -->
+                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                  <div class="card shadow-sm">
+                    <div class="card-header bg-transparent">
+                      <h5 class="mb-0">Riwayat Panggilan</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>Tanggal</th>
+                              <th>Kontak</th>
+                              <th>Durasi</th>
+                              <th>Status</th>
+                              <th>Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% if (callHistory && callHistory.length > 0) { %>
+                              <% callHistory.forEach(function(call) { %>
+                                <tr>
+                                  <td><%= new Date(call.created_at).toLocaleString() %></td>
+                                  <td><%= call.name %> (<%= call.phone %>)</td>
+                                  <td><%= call.duration ? call.duration + ' detik' : '-' %></td>
+                                  <td>
+                                    <% if (call.status === 'completed') { %>
+                                      <span class="badge bg-success">Selesai</span>
+                                    <% } else if (call.status === 'failed') { %>
+                                      <span class="badge bg-danger">Gagal</span>
+                                    <% } else if (call.status === 'no-answer') { %>
+                                      <span class="badge bg-warning">Tidak Dijawab</span>
+                                    <% } else if (call.status === 'busy') { %>
+                                      <span class="badge bg-secondary">Sibuk</span>
+                                    <% } else if (call.status === 'initiated' || call.status === 'queued') { %>
+                                      <span class="badge bg-primary">Proses</span>
+                                    <% } else { %>
+                                      <span class="badge bg-info"><%= call.status %></span>
+                                    <% } %>
+                                  </td>
+                                  <td>
+                                    <button class="btn btn-outline-info btn-sm view-conversation-btn" data-id="<%= call.id %>">
+                                      <i class="bi bi-chat-text"></i> Percakapan
+                                    </button>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="5" class="text-center">Belum ada riwayat panggilan</td>
+                              </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Before the script section, add a hidden element with user ID as data attribute -->
+<div id="user-data" data-user-id="<%= user ? user._id : '' %>" class="d-none"></div>
+
+<!-- Socket.IO Client -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- Custom JS -->
+<script src="/js/script.js"></script>
+<!-- Voice Agent JS -->
+<script src="/js/voice-agent.js"></script>
+
+<script>
+  // Fungsi untuk memuat voice TTS
+  async function loadTTSVoices() {
+    try {
+      const response = await fetch('/voice/tts-voices');
+      const data = await response.json();
+      
+      const ttsVoiceSelect = document.getElementById('ttsVoice');
+      
+      // Kosongkan pilihan sebelumnya
+      ttsVoiceSelect.innerHTML = '';
+      
+      // Tambahkan pilihan voice
+      data.voices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.id;
+        option.textContent = `${voice.name} (${voice.language})`;
+        ttsVoiceSelect.appendChild(option);
+      });
+      
+      // Set default voice Indonesia jika tersedia
+      const indonesianVoice = data.voices.find(v => v.language === 'id-ID');
+      if (indonesianVoice) {
+        ttsVoiceSelect.value = indonesianVoice.id;
+      }
+    } catch (error) {
+      console.error('Gagal memuat voice TTS:', error);
+      alert('Tidak dapat memuat daftar voice TTS');
+    }
+  }
+
+  // Muat voice saat halaman dimuat
+  document.addEventListener('DOMContentLoaded', loadTTSVoices);
+</script>
+
+<!-- Select Config Modal -->
+<div class="modal fade" id="selectConfigModal" tabindex="-1" aria-labelledby="selectConfigModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="selectConfigModalLabel">Pilih Konfigurasi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Hidden inputs for storing selected contact and mode -->
+        <input type="hidden" id="selectedContactId">
+        <input type="hidden" id="batchCallMode" value="false">
+        
+        <div class="mb-3">
+          <label for="callConfigSelect" class="form-label">Konfigurasi Agent</label>
+          <select class="form-control" id="callConfigSelect" required>
+            <% if (configs && configs.length > 0) { %>
+              <% configs.forEach(function(config) { %>
+                <option value="<%= config.id %>"><%= config.name %></option>
+              <% }); %>
+            <% } else { %>
+              <option value="">Tidak ada konfigurasi tersedia</option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="startCallBtn">Mulai Panggilan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Template for an active call card -->
+<template id="callTemplate">
+  <div class="active-call-card card mb-3" data-call-id="{callId}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h6 class="mb-0">{name} <span class="text-muted small">{phone}</span></h6>
+      <span class="badge bg-warning status-badge">Menghubungi...</span>
+    </div>
+    <div class="card-body p-2">
+      <div class="chat-container p-2" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; border-radius: 6px;">
+        <!-- Messages will be displayed here -->
+      </div>
+    </div>
+    <div class="card-footer call-footer d-flex justify-content-between align-items-center bg-transparent">
+      <div class="call-timer">00:00</div>
+      <button class="btn btn-danger btn-sm end-call-btn">
+        <i class="bi bi-telephone-x me-1"></i> Akhiri Panggilan
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- Template for an agent message -->
+<template id="agentMessageTemplate">
+  <div class="chat-message agent-message mb-2">
+    <div class="message-content bg-primary text-white p-2 rounded" style="max-width: 80%; float: left; clear: both;">
+      {message}
+    </div>
+    <div class="message-time small text-muted" style="clear: both; display: block; margin-top: 2px;">
+      {time}
+    </div>
+  </div>
+</template>
+
+<!-- Template for a user message -->
+<template id="userMessageTemplate">
+  <div class="chat-message user-message mb-2">
+    <div class="message-content bg-secondary text-white p-2 rounded" style="max-width: 80%; float: right; clear: both;">
+      {message}
+    </div>
+    <div class="message-time small text-muted" style="clear: both; display: block; margin-top: 2px; text-align: right;">
+      {time}
+    </div>
+  </div>
+</template>
+
+<!-- View conversation modal -->
+<div class="modal fade" id="viewConversationModal" tabindex="-1" aria-labelledby="viewConversationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewConversationModalLabel">Riwayat Percakapan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="conversation-container" style="max-height: 60vh; overflow-y: auto;">
+          <!-- Conversation will be displayed here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
